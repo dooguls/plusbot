@@ -13,12 +13,6 @@ BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
 #	pull all the users
 #	store all the real names and their slackUnames
 #def init_bot():
-#	api_call = sc.api_call("users.list")
-#	if api_call.get('ok'):
-#		userlist = api_call.get('members')
-#		for user in users:
-#			if 'name' in user:
-#				print("realname is: '" + user['name'] + "' and slackId is: '" + user.get('id') + "'")
 
 # plus_minus function
 #	get the message and parse for username and score
@@ -35,7 +29,7 @@ def main():
 	#init_bot()
 	api_call = sc.api_call("users.list")
 	if api_call.get('ok'):
-		# CREATE TABLE users (date text, realname text, slackUname text, score int);
+		# CREATE TABLE users (date text, name text, slackUname text unique, score int);
 		db_con = sqlite3.connect('plusbot.db')
 		cur = db_con.cursor()
 		userlist = api_call.get('members')
@@ -55,18 +49,27 @@ def main():
 			print("user is:'" + user + "' message is:'" + text + "'")
 			# for now it only picks up the first mentioned user's score
 			# i need to upgrade the regex so that i find all of the
-			# users in a message and then assign points accordingly
-			pPlus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>\+\+')
-			if pPlus.match(text):
-				cur.execute('''UPDATE users SET score = score + 1 WHERE slackUname = ? ''',(user,))
+			uNamePlus = re.search('<@U\w\w\w\w\w\w\w\w>\+\+',text)
+			if uNamePlus:
+				uName = uNamePlus.group(0)[2:11]
+				cur.execute('''UPDATE users SET score = score + 1 WHERE slackUname = ? ''',(uName,))
 				db_con.commit()
-				print(user + " has one more point!")
+				cur.execute('''SELECT name,score FROM users WHERE slackUname = ? ''',(uName,))
+				nameNscore = cur.fetchone()
+				print(str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
+				sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
 				continue
-			pMinus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>--')
-			if pMinus.match(text):
-				cur.execute('''UPDATE users SET score = score - 1 WHERE slackUname = ?''',(user,))
+			#pMinus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>--')
+			#if pMinus.match(text):
+			uNameMinus = re.search('<@U\w\w\w\w\w\w\w\w>--',text)
+			if uNameMinus:
+				uName = uNameMinus.group(0)[2:11]
+				cur.execute('''UPDATE users SET score = score - 1 WHERE slackUname = ? ''',(uName,))
 				db_con.commit()
-				print(user + " has one less point!")
+				cur.execute('''SELECT name,score FROM users WHERE slackUname = ? ''',(uName,))
+				nameNscore = cur.fetchone()
+				print(str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
+				sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
 				continue
 				
 	db_con.close()
