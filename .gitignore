@@ -1,0 +1,2 @@
+#I don't want my database included in the repo
+*.db
