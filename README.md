@@ -1,5 +1,7 @@
 *plusbot* is a little slack-bot, written in python-3,  which adds points to users with @username++ and takes points away with @username--. It stores the results in an sqlite database and can run on any linux box connected to the Internet.
 
+This bot is a written from scratch clone of https://plusplus.chat b/c I didn't want my information going to some other service in the cloud.
+
 ### Install instructions
 0. apt-get install sqlite3
 1. apt-get install python3
@@ -11,7 +13,9 @@
 
 ### Current Features:
 * ++ and -- add one point and subtract one point
+* command 'scoreboard' prints out report of current scores highest to lowest. To use the command type: '@plusbot scoreboard'
 
 ### Future Features:
-* print out report of current scores in highest score order
 * add or subtract points to more than one user in a message
+* add 'for' statement as in: "@username++ for being awesome"
+* add command 'check' to query on someone's current score. To use it type: '@plusbot check @somevaliduser'

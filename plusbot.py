@@ -40,6 +40,7 @@ def main():
 				cur.execute("INSERT OR IGNORE INTO users VALUES('{ts}','{rn}','{id}','0')".format(ts=timestamp,rn=userName['name'],id=userName.get('id')))
 		db_con.commit()
 	#plus_minus()
+	plusbotSlackUname = 'U3L9KBRU5'
 	while True:
 		for sm in sc.rtm_read():
 			text = sm.get("text")
@@ -71,7 +72,18 @@ def main():
 				print(str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
 				sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
 				continue
-				
+			foundPlusBot = re.search(plusbotSlackUname,text)
+			if foundPlusBot:
+				command = re.search('scoreboard',text)
+				if command:
+					cur.execute('''SELECT name,score FROM users ORDER BY score DESC''')
+					rows = cur.fetchall()
+					for row in rows:
+						sc.rtm_send_message("dev",str(row[0]) + " has score: " + str(row[1]))
+					continue
+				else:
+					sc.rtm_send_message("dev", "scoreboard is the only command recognized right now.")
+					continue
 	db_con.close()
 if __name__ == "__main__":
 	main()
