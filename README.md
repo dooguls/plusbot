@@ -14,8 +14,11 @@ This bot is a written from scratch clone of https://plusplus.chat b/c I didn't w
 ### Current Features:
 * ++ and -- add one point and subtract one point
 * command 'scoreboard' prints out report of current scores highest to lowest. To use the command type: '@plusbot scoreboard'
+* command 'check' to query on someone's current score. To use it type: '@plusbot check @somevaliduser'
 
 ### Future Features:
 * add or subtract points to more than one user in a message
 * add 'for' statement as in: "@username++ for being awesome"
-* add command 'check' to query on someone's current score. To use it type: '@plusbot check @somevaliduser'
+* add weekly honors concept. Where on Fridays at 0800 EST/EDT the bot announces the score and says something clever about the top spot and something derogatory about the bottom person
+* add feature for software to create database first time it's run instead of creating the database outside of the script.
+* remove all of the hard coded stuff for channel name, bot name, and whatnot

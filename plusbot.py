@@ -74,12 +74,20 @@ def main():
 				continue
 			foundPlusBot = re.search(plusbotSlackUname,text)
 			if foundPlusBot:
-				command = re.search('scoreboard',text)
-				if command:
+				scoreCommand = re.search('scoreboard',text)
+				if scoreCommand:
 					cur.execute('''SELECT name,score FROM users ORDER BY score DESC''')
 					rows = cur.fetchall()
 					for row in rows:
 						sc.rtm_send_message("dev",str(row[0]) + " has score: " + str(row[1]))
+					continue
+				checkCommand = re.search('check',text)
+				if checkCommand:
+					checkUname = re.search('<@U\w\w\w\w\w\w\w\w>$',text)
+					checkUnameStrip = checkUname.group(0)[2:11]
+					cur.execute('''SELECT name,score From users WHERE slackUname = ? ''',(checkUnameStrip,))
+					row = cur.fetchone()
+					sc.rtm_send_message("dev",str(row[0]) + " has score: " + str(row[1]))
 					continue
 				else:
 					sc.rtm_send_message("dev", "scoreboard is the only command recognized right now.")
