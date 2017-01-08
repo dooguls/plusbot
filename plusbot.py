@@ -27,9 +27,11 @@ def main():
 	sc.rtm_send_message("dev", "I'm allive!")
 
 	#init_bot()
+	#=========== grab all the users and stuff in database
 	api_call = sc.api_call("users.list")
 	if api_call.get('ok'):
-		# CREATE TABLE users (date text, name text, slackUname text unique, score int);
+		# This is what the database table looks like
+		#CREATE TABLE users (date text, name text, slackUname text unique, score int, forStatement text);
 		db_con = sqlite3.connect('plusbot.db')
 		cur = db_con.cursor()
 		userlist = api_call.get('members')
@@ -37,9 +39,9 @@ def main():
 			if 'name' in userName:
 				print("realname is: '" + userName['name'] + "' and slackId is: '" + userName.get('id') + "'")
 				timestamp =  datetime.datetime.now().strftime("%Y%m%d%H%M")
-				cur.execute("INSERT OR IGNORE INTO users VALUES('{ts}','{rn}','{id}','0')".format(ts=timestamp,rn=userName['name'],id=userName.get('id')))
+				cur.execute("INSERT OR IGNORE INTO users VALUES('{ts}','{rn}','{id}','0','')".format(ts=timestamp,rn=userName['name'],id=userName.get('id')))
 		db_con.commit()
-	#plus_minus()
+	#========== the super big while that listens to new messages
 	plusbotSlackUname = 'U3L9KBRU5'
 	while True:
 		for sm in sc.rtm_read():
@@ -48,6 +50,7 @@ def main():
 			if not text or not user:
 				continue
 			print("user is:'" + user + "' message is:'" + text + "'")
+			#========== the core ++ and -- functionality
 			# for now it only picks up the first mentioned user's score
 			# i need to upgrade the regex so that i find all of the
 			uNamePlus = re.search('<@U\w\w\w\w\w\w\w\w>\+\+',text)
@@ -57,8 +60,17 @@ def main():
 				db_con.commit()
 				cur.execute('''SELECT name,score FROM users WHERE slackUname = ? ''',(uName,))
 				nameNscore = cur.fetchone()
-				print(str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
-				sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
+				#========== adding for statement
+				forFound = re.search(' for ',text)
+				if forFound:
+					forString = text.split(" for ")
+					print(str(nameNscore[0]) + " has one more point for: " + forString[1] +  " Their total score is: " + str(nameNscore[1]))
+					sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
+					cur.execute('''UPDATE users SET forStatement = ? WHERE slackUname = ? ''',(forString[1],uName,))
+					db_con.commit()
+				else:
+					print(str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
+					sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
 				continue
 			#pMinus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>--')
 			#if pMinus.match(text):
@@ -69,9 +81,19 @@ def main():
 				db_con.commit()
 				cur.execute('''SELECT name,score FROM users WHERE slackUname = ? ''',(uName,))
 				nameNscore = cur.fetchone()
-				print(str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
-				sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
+				#========== adding for statement
+				forFound = re.search(' for ',text)
+				if forFound:
+					forString = text.split(" for ")
+					print(str(nameNscore[0]) + " has one less point for: " + forString[1] +  " Their total score is: " + str(nameNscore[1]))
+					sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
+					cur.execute('''UPDATE users SET forStatement = ? WHERE slackUname = ? ''',(forString[1],uName,))
+					db_con.commit()
+				else:
+					print(str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
+					sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
 				continue
+			#========== commands to plusbot
 			foundPlusBot = re.search(plusbotSlackUname,text)
 			if foundPlusBot:
 				scoreCommand = re.search('scoreboard',text)
