@@ -56,9 +56,12 @@ def main():
                 continue
             print("user is:'" + user + "' message is:'" + text + "'")
             #========== the core ++ and -- functionality
+            # There is oddness in the mobile client where you can't have ++ or -- touching the username
+            #   or the client won't pick up the fact that its a real username. so i have to detect
+            #   whether there is a space or not and allow both.
             # for now it only picks up the first mentioned user's score
             # i need to upgrade the regex so that i find all of the
-            uNamePlus = re.search('<@U\w\w\w\w\w\w\w\w>\+\+',text)
+            uNamePlus = re.search('<@U\w\w\w\w\w\w\w\w> ?\+\+',text)
             if uNamePlus:
                 uName = uNamePlus.group(0)[2:11]
                 cur.execute('''UPDATE users SET score = score + 1 WHERE slackUname = ? ''',(uName,))
@@ -79,7 +82,7 @@ def main():
                 continue
             #pMinus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>--')
             #if pMinus.match(text):
-            uNameMinus = re.search('<@U\w\w\w\w\w\w\w\w>--',text)
+            uNameMinus = re.search('<@U\w\w\w\w\w\w\w\w> ?--',text)
             if uNameMinus:
                 uName = uNameMinus.group(0)[2:11]
                 cur.execute('''UPDATE users SET score = score - 1 WHERE slackUname = ? ''',(uName,))
@@ -125,8 +128,8 @@ def main():
                 # === help
                 helpCommand = re.search('help',text)
                 if helpCommand:
-                    sc.rtm_send_message("dev","to add points to someone type: @validuser++")
-                    sc.rtm_send_message("dev","to take points from someone type: @validuser--")
+                    sc.rtm_send_message("dev","to add points to someone type: @validuser++ or @validuser ++ on the mobile client")
+                    sc.rtm_send_message("dev","to take points from someone type: @validuser-- or @validuser -- on the mobile client")
                     sc.rtm_send_message("dev","to check the current scoreboard type: @plusbot scoreboard")
                     sc.rtm_send_message("dev","to check a specific user type: @plusbot check @validuser")
                     sc.rtm_send_message("dev","you can give someone points 'for' something like: @validuser++ for being awesome")

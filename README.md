@@ -2,7 +2,7 @@
 
 This bot is a written from scratch clone of https://plusplus.chat b/c I didn't want my information going to some other service in the cloud.
 
-### Install instructions
+### Install instructions (assuming ubuntu or some form of debian)
 0. apt-get install sqlite3
 1. apt-get install python3
 2. apt-get install python3-pip
@@ -11,11 +11,11 @@ This bot is a written from scratch clone of https://plusplus.chat b/c I didn't w
 5. invite the bot to your channel for it to work.
 
 ### Current Features:
-* ++ and -- add one point and subtract one point like: @validuser++ or @validuser--
+* ++ and -- add one point and subtract one point like: '@validuser++' or '@validuser--' or can have a space like '@validuser ++' or '@validuser --'
 * command 'scoreboard' prints out report of current scores highest to lowest. To use the command type: '@plusbot scoreboard'
 * command 'check' to query on someone's current score. To use it type: '@plusbot check @somevaliduser'
 * 'for' statement as in: "@username++ for being awesome"
-* help statement tells all the commands as in: @plusbot help
+* help statement tells all the commands as in: '@plusbot help'
 
 ### Future Features:
 * add or subtract points to more than one user in a message
