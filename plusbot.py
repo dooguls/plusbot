@@ -31,9 +31,11 @@ def main():
     cur = db_con.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS users (date text, name text, slackUname text unique, score int, forStatement text)')
     # init connection to slack
+    channel = 'dev'
+    dev_channel = 'dev'
     sc = SlackClient(BOT_TOKEN)
     sc.rtm_connect()
-    sc.rtm_send_message("dev", "I'm allive!")
+    sc.rtm_send_message(dev_channel, "I'm allive!")
 
     #init_bot()
     #=========== grab all the users and stuff in database
@@ -46,14 +48,19 @@ def main():
                 timestamp =  datetime.datetime.now().strftime("%Y%m%d%H%M")
                 cur.execute("INSERT OR IGNORE INTO users VALUES('{ts}','{rn}','{id}','0','')".format(ts=timestamp,rn=userName['name'],id=userName.get('id')))
         db_con.commit()
-	#========== the super big while that listens to new messages
+
+    #========== the super big while that listens to new messages
     plusbotSlackUname = 'U3L9KBRU5'
     while True:
         for sm in sc.rtm_read():
             text = sm.get("text")
             user = sm.get("user")
-            if not text or not user:
+            chann = sm.get("channel")
+            if not text or not user or not chann:
                 continue
+            print("channel from sm.get:" + str(chann))
+            channel_info = sc.api_call("channels.info",channel=chann)
+            print ("channel_info[channel][name]" + channel_info["channel"]["name"])
             print("user is:'" + user + "' message is:'" + text + "'")
             #========== the core ++ and -- functionality
             # There is oddness in the mobile client where you can't have ++ or -- touching the username
@@ -73,12 +80,12 @@ def main():
                 if forFound:
                     forString = text.split(" for ")
                     print(str(nameNscore[0]) + " has one more point for: " + forString[1] +  " Their total score is: " + str(nameNscore[1]))
-                    sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
+                    sc.rtm_send_message(channel_info["channel"]["name"], str(nameNscore[0]) + " has one more point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
                     cur.execute('''UPDATE users SET forStatement = ? WHERE slackUname = ? ''',(forString[1],uName,))
                     db_con.commit()
                 else:
                     print(str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
-                    sc.rtm_send_message("dev", str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
+                    sc.rtm_send_message(channel_info["channel"]["name"], str(nameNscore[0]) + " has one more point! Their total score is: " + str(nameNscore[1]))
                 continue
             #pMinus = re.compile('^.*<@U\w\w\w\w\w\w\w\w>--')
             #if pMinus.match(text):
@@ -94,12 +101,12 @@ def main():
                 if forFound:
                     forString = text.split(" for ")
                     print(str(nameNscore[0]) + " has one less point for: " + forString[1] +  " Their total score is: " + str(nameNscore[1]))
-                    sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
+                    sc.rtm_send_message(channel_info["channel"]["name"], str(nameNscore[0]) + " has one less point for: " + forString[1] + " Their total score is: " + str(nameNscore[1]))
                     cur.execute('''UPDATE users SET forStatement = ? WHERE slackUname = ? ''',(forString[1],uName,))
                     db_con.commit()
                 else:
                     print(str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
-                    sc.rtm_send_message("dev", str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
+                    sc.rtm_send_message(channel_info["channel"]["name"], str(nameNscore[0]) + " has one less point! Their total score is: " + str(nameNscore[1]))
                 continue
             #========== commands to plusbot
             foundPlusBot = re.search(plusbotSlackUname,text)
@@ -110,7 +117,7 @@ def main():
                     cur.execute('''SELECT name,score FROM users ORDER BY score DESC''')
                     rows = cur.fetchall()
                     for row in rows:
-                        sc.rtm_send_message("dev",str(row[0]) + " has score: " + str(row[1]))
+                        sc.rtm_send_message(channel_info["channel"]["name"],str(row[0]) + " has score: " + str(row[1]))
                     continue
                 # === check users
                 checkCommand = re.search('check',text)
@@ -121,21 +128,21 @@ def main():
                         checkUnameStrip = checkUname.group(0)[2:11]
                         cur.execute('''SELECT name,score From users WHERE slackUname = ? ''',(checkUnameStrip,))
                         row = cur.fetchone()
-                        sc.rtm_send_message("dev",str(row[0]) + " has score: " + str(row[1]))
+                        sc.rtm_send_message(channel_info["channel"]["name"],str(row[0]) + " has score: " + str(row[1]))
                         continue
                     except AttributeError:
-                        sc.rtm_send_message("dev","not a valid user, please try again.")
+                        sc.rtm_send_message(channel_info["channel"]["name"],"not a valid user, please try again.")
                 # === help
                 helpCommand = re.search('help',text)
                 if helpCommand:
-                    sc.rtm_send_message("dev","to add points to someone type: @validuser++ or @validuser ++ on the mobile client")
-                    sc.rtm_send_message("dev","to take points from someone type: @validuser-- or @validuser -- on the mobile client")
-                    sc.rtm_send_message("dev","to check the current scoreboard type: @plusbot scoreboard")
-                    sc.rtm_send_message("dev","to check a specific user type: @plusbot check @validuser")
-                    sc.rtm_send_message("dev","you can give someone points 'for' something like: @validuser++ for being awesome")
-                    sc.rtm_send_message("dev","you can see the help by typing: @plusbot help")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"to add points to someone type: @validuser++ or @validuser ++ on the mobile client")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"to take points from someone type: @validuser-- or @validuser -- on the mobile client")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"to check the current scoreboard type: @plusbot scoreboard")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"to check a specific user type: @plusbot check @validuser")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"you can give someone points 'for' something like: @validuser++ for being awesome")
+                    sc.rtm_send_message(channel_info["channel"]["name"],"you can see the help by typing: @plusbot help")
                 else:
-                    sc.rtm_send_message("dev", "check & scoreboard are the only commands recognized right now.")
+                    sc.rtm_send_message(channel_info["channel"]["name"], "check & scoreboard are the only commands recognized right now.")
                     continue
     db_con.close()
 if __name__ == "__main__":
