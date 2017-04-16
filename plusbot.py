@@ -7,7 +7,7 @@ import sqlite3
 from slackclient import SlackClient
 
 BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
-#BOT_NAME = "plusbot"
+BOT_NAME = "plusbot"
 
 # init function
 #	pull all the users
@@ -39,6 +39,7 @@ def main():
 
     #init_bot()
     #=========== grab all the users and stuff in database
+    #   Also figure out the bot's slack id and store it for later
     api_call = sc.api_call("users.list")
     if api_call.get('ok'):
         userlist = api_call.get('members')
@@ -47,10 +48,12 @@ def main():
                 print("realname is: '" + userName['name'] + "' and slackId is: '" + userName.get('id') + "'")
                 timestamp =  datetime.datetime.now().strftime("%Y%m%d%H%M")
                 cur.execute("INSERT OR IGNORE INTO users VALUES('{ts}','{rn}','{id}','0','')".format(ts=timestamp,rn=userName['name'],id=userName.get('id')))
+                if userName['name'] == BOT_NAME:
+                    plusbotSlackUname = userName.get('id')
         db_con.commit()
 
     #========== the super big while that listens to new messages
-    plusbotSlackUname = 'U3L9KBRU5'
+    #plusbotSlackUname = 'U3L9KBRU5'
     while True:
         for sm in sc.rtm_read():
             text = sm.get("text")
@@ -146,4 +149,7 @@ def main():
                     continue
     db_con.close()
 if __name__ == "__main__":
+    #try:
     main()
+    #except KeyboardInterrupt:
+    #    exit_gracefully()
