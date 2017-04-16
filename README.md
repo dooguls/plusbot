@@ -20,4 +20,5 @@ This bot is a written from scratch clone of https://plusplus.chat b/c I didn't w
 ### Future Features:
 * add or subtract points to more than one user in a message
 * add weekly honors concept. Where on Fridays at 0800 EST/EDT the bot announces the score and says something clever about the top spot and something derogatory about the bottom person
-* remove all of the hard coded stuff for channel name, bot name, and whatnot
+* refactor the code so that it's a bunch of functions instead of one big main
+* handle more exceptions like KeyboardInterrupt and whatever the timeout one is called
